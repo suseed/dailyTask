@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>오늘 할 일 – 우선순위 & 상태 관리</title>
+<title>오늘 할 일 – 구분·우선순위·상태 관리</title>
 <style>
 :root{--primary:#4f46e5;--bg:#f9fafb;--text:#111827;}
 *{box-sizing:border-box;}
 body{font-family:'Segoe UI',sans-serif;background:var(--bg);margin:0;padding:2rem;color:var(--text);}
 h1{margin:0 0 1rem}
-.card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);padding:1.5rem;max-width:840px;margin:auto;}
-form{display:flex;flex-wrap:wrap;gap:.5rem}
+.card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);padding:1.6rem;max-width:900px;margin:auto;}
+form,.actions{display:flex;flex-wrap:wrap;gap:.5rem}
 input,select,button{padding:.55rem .8rem;font-size:1rem;border:1px solid #d1d5db;border-radius:8px;}
 input:focus,select:focus{outline:none;border-color:var(--primary);}
 button{cursor:pointer;transition:.2s}
-button.action{background:var(--primary);color:#fff;border:none;}
-button.action:hover{background:#4338ca}
-button.secondary{background:#e5e7eb;border:none;color:#374151}
-button.secondary:hover{background:#d1d5db}
-#taskText{flex:1 1 220px;}#taskDate{flex:0 1 150px;}#taskPriority{flex:0 1 120px;}
-.actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem}
+button.action{background:var(--primary);color:#fff;border:none;} button.action:hover{background:#4338ca}
+button.secondary{background:#e5e7eb;border:none;color:#374151} button.secondary:hover{background:#d1d5db}
+#taskText{flex:1 1 220px;} #taskDate{flex:0 1 150px;} #taskPriority{flex:0 1 120px;} #taskType{flex:0 1 120px;} #taskPerson{flex:0 1 160px;}
 .task-list{list-style:none;padding:0;margin-top:1.5rem}
 .task{display:flex;justify-content:space-between;align-items:flex-start;background:#f3f4f6;margin-bottom:.6rem;padding:.8rem 1rem;border-radius:8px;flex-wrap:wrap;gap:.5rem}
-.task .info{display:flex;flex-direction:column;gap:2px;min-width:220px}
-.task .date{font-size:.85rem;color:#6b7280}
-.priority{font-size:.8rem;background:#e0e7ff;color:#4338ca;border-radius:6px;padding:.05rem .5rem;width:max-content}
-.status{font-size:.75rem;border-radius:6px;padding:.05rem .5rem;width:max-content}
+.task .info{display:flex;flex-direction:column;gap:2px;min-width:240px}
+.task .small{font-size:.85rem;color:#6b7280}
+.badge{font-size:.75rem;border-radius:6px;padding:.05rem .5rem;width:max-content}
+.priority{background:#e0e7ff;color:#4338ca}
 .status-진행{background:#E5E7EB;color:#374151}
 .status-완료{background:#D1FAE5;color:#065F46}
 .status-보류{background:#FEF3C7;color:#92400E}
 .status-취소{background:#FEE2E2;color:#991B1B}
+.type-실행{background:#DBEAFE;color:#1D4ED8}
+.type-위임{background:#DCFCE7;color:#065F46}
+.type-지시{background:#FDE68A;color:#92400E}
 .row-btn{background:#e5e7eb;border:none;font-size:.8rem;padding:.3rem .6rem;margin-left:.2rem;border-radius:6px}
 .row-btn:hover{background:#d1d5db}
 .icon-btn{background:transparent;border:none;font-size:1.1rem;color:#6b7280;margin-left:.3rem}
@@ -41,22 +41,29 @@ button.secondary:hover{background:#d1d5db}
 <body>
 <div class="card">
   <h1>오늘 할 일</h1>
+
   <!-- 입력 -->
   <form id="taskForm">
-    <input id="taskText" type="text" placeholder="할 일을 입력하세요" required>
-    <input id="taskDate" type="date" required>
+    <input id="taskText"  type="text"  placeholder="할 일을 입력하세요" required>
+    <input id="taskDate"  type="date"  required>
     <select id="taskPriority" required>
       <option value="" disabled selected>우선순위</option>
-      <option value="1">1 (가장 높음)</option><option value="2">2</option>
-      <option value="3">3</option><option value="4">4</option>
-      <option value="5">5 (가장 낮음)</option>
+      <option value="1">1 (높음)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 (낮음)</option>
     </select>
+    <select id="taskType" required>
+      <option value="" disabled selected>업무 구분</option>
+      <option value="실행">실행</option><option value="위임">위임</option><option value="지시">지시</option>
+    </select>
+    <input id="taskPerson" type="text" placeholder="담당/지시자" style="display:none">
     <button type="submit" class="action">추가</button>
   </form>
 
   <!-- 전역 버튼 -->
-  <div class="actions">
-    <button id="sortPriorityBtn" class="secondary">우선순위 정렬</button>
+  <div class="actions" style="margin-top:1rem">
+    <button id="sortPrioBtn"  class="secondary">우선순위 정렬</button>
+    <button id="sortExecBtn"  class="secondary">실행 업무 우선</button>
+    <button id="sortDelegBtn" class="secondary">위임 업무 우선</button>
+    <button id="sortInstrBtn" class="secondary">지시 업무 우선</button>
 
     <input type="file" id="jsonFile" accept=".json" hidden>
     <button id="uploadJsonBtn" class="secondary">JSON 업로드</button>
@@ -67,7 +74,6 @@ button.secondary:hover{background:#d1d5db}
     <button id="googleBtn"    class="secondary">구글독 저장</button>
   </div>
 
-  <!-- 목록 -->
   <ul id="taskList" class="task-list"></ul>
   <p id="emptyMessage" class="empty">할 일을 추가해 주세요 ✨</p>
 </div>
@@ -75,143 +81,142 @@ button.secondary:hover{background:#d1d5db}
 <script>
 const $=id=>document.getElementById(id);
 
-// 요소
-const taskForm=$('taskForm'),taskText=$('taskText'),taskDate=$('taskDate'),
-      taskPrio=$('taskPriority'),taskList=$('taskList'),emptyMsg=$('emptyMessage');
-// 오늘 날짜 기본값
+// 입력 필드
+const taskForm=$('taskForm'), taskText=$('taskText'), taskDate=$('taskDate'),
+      taskPrio=$('taskPriority'), taskType=$('taskType'), taskPerson=$('taskPerson');
 taskDate.value=new Date().toISOString().split('T')[0];
+
+// 업무 구분 따라 담당자 입력칸 토글
+taskType.addEventListener('change',()=>{
+  if(taskType.value==='위임'||taskType.value==='지시'){ taskPerson.style.display='inline-block'; taskPerson.required=true; }
+  else{ taskPerson.style.display='none'; taskPerson.value=''; taskPerson.required=false; }
+});
 
 // 데이터
 let tasks=JSON.parse(localStorage.getItem('tasks')||'[]').map(t=>({...t,status:t.status||'진행'}));
-let editingId=null;  // 현재 편집 중인 행 id
+let editingId=null;
 render();
 
-/* ------------- CRUD ------------- */
+/* ---------- CRUD ---------- */
 taskForm.addEventListener('submit',e=>{
   e.preventDefault();
-  const text=taskText.value.trim(),date=taskDate.value,prio=parseInt(taskPrio.value);
-  if(!text||!date||!prio)return;
-  tasks.push({id:Date.now(),text,date,priority:prio,status:'진행'});
-  save();render();
-  taskForm.reset();taskDate.value=new Date().toISOString().split('T')[0];taskText.focus();
+  const text=taskText.value.trim(),date=taskDate.value,
+        prio=parseInt(taskPrio.value),type=taskType.value,
+        person=taskPerson.value.trim();
+  if(!text||!date||!prio||!type) return;
+  if((type==='위임'||type==='지시') && !person) return alert("담당/지시자를 입력하세요");
+  tasks.push({id:Date.now(),text,date,priority:prio,status:'진행',type,person});
+  save(); render(); taskForm.reset(); taskDate.value=new Date().toISOString().split('T')[0]; taskPerson.style.display='none';
 });
 function save(){localStorage.setItem('tasks',JSON.stringify(tasks));}
-function setStatus(id,newStatus){const t=tasks.find(x=>x.id===id);if(t){t.status=newStatus;save();render();}}
-function removeTask(id){if(editingId===id)editingId=null;tasks=tasks.filter(t=>t.id!==id);save();render();}
+function setStatus(id,newSt){const t=tasks.find(x=>x.id===id); if(t){t.status=newSt; save(); render();}}
+function removeTask(id){if(editingId===id)editingId=null; tasks=tasks.filter(t=>t.id!==id); save(); render();}
 
-/* ---------- 편집 로직 ---------- */
-function editTask(id){editingId=id;render();}
+/* ---------- 편집 ---------- */
+function editTask(id){editingId=id; render();}
 function confirmEdit(id){
-  const text=$(`editText-${id}`).value.trim();
-  const date=$(`editDate-${id}`).value;
-  const prio=parseInt($(`editPri-${id}`).value);
-  const status=$(`editStatus-${id}`).value;
-  if(!text||!date||!(prio>=1&&prio<=5))return alert("값이 올바르지 않습니다");
-  const t=tasks.find(x=>x.id===id);
-  Object.assign(t,{text,date,priority:prio,status});
-  editingId=null;save();render();
+  const text=$(`eText-${id}`).value.trim(),
+        date=$(`eDate-${id}`).value,
+        prio=parseInt($(`ePri-${id}`).value),
+        type=$(`eType-${id}`).value,
+        person=$(`ePerson-${id}`).value.trim(),
+        status=$(`eStat-${id}`).value;
+  if(!text||!date||!prio||!type) return alert("값이 올바르지 않습니다");
+  if((type==='위임'||type==='지시') && !person) return alert("담당/지시자를 입력하세요");
+  Object.assign(tasks.find(x=>x.id===id),{text,date,priority:prio,type,person,status});
+  editingId=null; save(); render();
 }
-function cancelEdit(){editingId=null;render();}
+function cancelEdit(){editingId=null; render();}
 
 /* ---------- 렌더 ---------- */
 function render(){
   taskList.innerHTML='';
-  if(tasks.length===0){emptyMsg.style.display='block';return;}
-  emptyMsg.style.display='none';
+  if(tasks.length===0){emptyMessage.style.display='block'; return;}
+  emptyMessage.style.display='none';
 
-  const makeSelect=(id,selVal)=>`
-    <select id="${id}" style="margin-bottom:4px">
-      <option value="1" ${selVal==1?'selected':''}>1</option>
-      <option value="2" ${selVal==2?'selected':''}>2</option>
-      <option value="3" ${selVal==3?'selected':''}>3</option>
-      <option value="4" ${selVal==4?'selected':''}>4</option>
-      <option value="5" ${selVal==5?'selected':''}>5</option>
-    </select>`;
-  const makeStatusSel=(id,val)=>`
-    <select id="${id}" style="margin-bottom:4px">
-      ${['진행','완료','보류','취소'].map(s=>`<option value="${s}" ${s===val?'selected':''}>${s}</option>`).join('')}
-    </select>`;
-
+  const sel=(id,val,opts)=>`<select id="${id}" style="margin-bottom:4px">${opts.map(o=>`<option${o==val?' selected':''}>${o}</option>`).join('')}</select>`;
   tasks.forEach(t=>{
-    const li=document.createElement('li');li.className='task';li.dataset.id=t.id;
-
+    const li=document.createElement('li'); li.className='task';
     if(editingId===t.id){
-      /* 편집 모드 */
       li.innerHTML=`
         <div class="info">
-          <input id="editText-${t.id}" value="${t.text}" style="margin-bottom:4px">
-          <input id="editDate-${t.id}" type="date" value="${t.date}" style="margin-bottom:4px">
-          ${makeSelect(`editPri-${t.id}`,t.priority)}
-          ${makeStatusSel(`editStatus-${t.id}`,t.status)}
+          <input  id="eText-${t.id}" value="${t.text}" style="margin-bottom:4px">
+          <input  id="eDate-${t.id}" type="date" value="${t.date}" style="margin-bottom:4px">
+          ${sel(`ePri-${t.id}`,t.priority,['1','2','3','4','5'])}
+          ${sel(`eType-${t.id}`,t.type,['실행','위임','지시'])}
+          <input id="ePerson-${t.id}" value="${t.person||''}" placeholder="담당/지시자" style="margin-bottom:4px">
+          ${sel(`eStat-${t.id}`,t.status,['진행','완료','보류','취소'])}
         </div>
         <div>
           <button class="row-btn" onclick="confirmEdit(${t.id})">저장</button>
           <button class="row-btn" onclick="cancelEdit()">취소</button>
         </div>`;
     }else{
-      /* 일반 모드 */
       li.innerHTML=`
         <div class="info">
           <span>${t.text}</span>
-          <span class="date">${t.date}</span>
-          <span class="priority">우선순위 ${t.priority}</span>
-          <span class="status status-${t.status}">${t.status}</span>
+          <span class="small">${t.date}</span>
+          <span class="badge priority">P${t.priority}</span>
+          <span class="badge status-${t.status}">${t.status}</span>
+          <span class="badge type-${t.type}">${t.type}</span>
+          ${t.person?`<span class="small">담당: ${t.person}</span>`:''}
         </div>
         <div>
           <button class="row-btn" onclick="setStatus(${t.id},'완료')">완료</button>
           <button class="row-btn" onclick="setStatus(${t.id},'보류')">보류</button>
           <button class="row-btn" onclick="setStatus(${t.id},'취소')">취소</button>
-          <button class="icon-btn" onclick="editTask(${t.id})" aria-label="수정">✎</button>
-          <button class="icon-btn" onclick="removeTask(${t.id})" aria-label="삭제">×</button>
+          <button class="icon-btn" onclick="editTask(${t.id})">✎</button>
+          <button class="icon-btn" onclick="removeTask(${t.id})">×</button>
         </div>`;
     }
     taskList.appendChild(li);
   });
 }
 
-/* ---------- 전역 버튼 ---------- */
-$('sortPriorityBtn').onclick=()=>{
-  tasks.sort((a,b)=>a.priority-b.priority||(a.date||'').localeCompare(b.date||'')); 
-  save();render();};
-
-/* ---------- 내보내기 / 가져오기 ---------- */
-function download(blob,filename){
-  const link=document.createElement('a');link.href=URL.createObjectURL(blob);
-  link.download=filename;document.body.appendChild(link);link.click();
-  setTimeout(()=>{URL.revokeObjectURL(link.href);link.remove();},0);
+/* ---------- 정렬 ---------- */
+$('sortPrioBtn').onclick=()=>{  /* 우선순위(P1→P5) 정렬 */
+  tasks.sort((a,b)=>a.priority-b.priority||(a.date||'').localeCompare(b.date||'')); save(); render();
+};
+function sortByTypeFirst(first){
+  tasks.sort((a,b)=>(a.type===first?0:1)-(b.type===first?0:1)||
+                     a.priority-b.priority||
+                     (a.date||'').localeCompare(b.date||'')); save(); render();
 }
-$('saveJsonBtn').onclick=()=>download(new Blob([JSON.stringify(tasks,null,2)],{type:'application/json'}),'tasks.json');
+$('sortExecBtn').onclick=()=>sortByTypeFirst('실행');
+$('sortDelegBtn').onclick=()=>sortByTypeFirst('위임');
+$('sortInstrBtn').onclick=()=>sortByTypeFirst('지시');
+
+/* ---------- 파일/프린트 ---------- */
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},0);}
+$('saveJsonBtn').onclick=()=>dl(new Blob([JSON.stringify(tasks,null,2)],{type:'application/json'}),'tasks.json');
 $('saveCsvBtn').onclick=()=>{
-  const csv=['text,date,priority,status',...tasks.map(t=>`"${t.text.replace(/"/g,'""')}",${t.date},${t.priority},${t.status}`)].join('\n');
-  download(new Blob([csv],{type:'text/csv'}),'tasks.csv');};
-$('savePdfBtn').onclick=()=>{
-  const{jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(12);let y=10;
-  doc.text("오늘 할 일 목록",14,y);y+=8;
-  tasks.forEach((t,i)=>{doc.text(`${i+1}. ${t.text} | ${t.date} | P${t.priority} | ${t.status}`,14,y);y+=8;
-    if(y>280){doc.addPage();y=10;}});
+  const csv=['text,date,priority,status,type,person',
+    ...tasks.map(t=>`"${t.text.replace(/"/g,'""')}",${t.date},${t.priority},${t.status},${t.type},${t.person||''}`)].join('\n');
+  dl(new Blob([csv],{type:'text/csv'}),'tasks.csv');
+};
+$('savePdfBtn').onclick=()=>{const{jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(12);let y=10;
+  doc.text("오늘 할 일",14,y);y+=8;
+  tasks.forEach((t,i)=>{doc.text(`${i+1}. ${t.text} | ${t.date} | P${t.priority} | ${t.type}${t.person?'('+t.person+')':''} | ${t.status}`,14,y);y+=8;if(y>280){doc.addPage();y=10;}});
   doc.save('tasks.pdf');};
 $('printBtn').onclick=()=>window.print();
 
 /* ---------- JSON 업로드 ---------- */
 $('uploadJsonBtn').onclick=()=>$('jsonFile').click();
 $('jsonFile').addEventListener('change',e=>{
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    try{
-      const data=JSON.parse(evt.target.result);
-      if(!Array.isArray(data))throw 0;
-      tasks=data.map(d=>({...d,id:d.id||Date.now()+Math.random(),status:d.status||'진행'}));
-      editingId=null;save();render();
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=evt=>{
+    try{ const d=JSON.parse(evt.target.result);
+      if(!Array.isArray(d)) throw 0;
+      tasks=d.map(o=>({...o,id:o.id||Date.now()+Math.random(),status:o.status||'진행'}));
+      editingId=null; save(); render();
     }catch{alert("올바른 JSON 형식이 아닙니다.");}
-  };
-  reader.readAsText(file);
+  }; r.readAsText(f);
 });
 
-/* ---------- Google Docs / Sheets 전송 ---------- */
+/* ---------- Google Docs / Sheets (Apps Script) ---------- */
 $('googleBtn').onclick=()=>{
-  const endpoint='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // <- 자신의 URL로 교체
-  fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(tasks)})
+  const url='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // ← 고유 URL로 수정
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(tasks)})
     .then(r=>r.text()).then(msg=>alert("전송 완료: "+msg))
     .catch(err=>alert("전송 실패: "+err));
 };
